@@ -97,7 +97,7 @@ function ensureCorrectUrlForRevenueCalculation() {
     // Check if the current URL matches the expected URL
     if (currentUrl.startsWith(expectedUrl)) {
       console.log('We are on the correct URL. Calculating revenue...');
-      startCountdown(2); // Start a 5-second countdown
+      startCountdown(1); // Start a 5-second countdown
     } else {
       console.log('Redirecting to the correct URL for revenue calculations.');
       window.location.href = expectedUrl;
