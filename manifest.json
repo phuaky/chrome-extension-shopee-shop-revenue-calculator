@@ -8,14 +8,12 @@
     "scripting"
   ],
   "host_permissions": [
-    "https://sg.xiapibuy.com/*",
-    "https://shopee.sg/*"
+    "https://www.tumblr.com/*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://sg.xiapibuy.com/*",
-        "https://shopee.sg/*"
+        "https://www.tumblr.com/*"
       ],
       "js": [
         "content.js"

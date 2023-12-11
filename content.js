@@ -25,7 +25,7 @@ function createRevenueButton() {
 }
 
 function calculateRevenue() {
-  let totalRevenue = 0;
+  let productsRevenue = [];
   const productContainers = document.querySelectorAll(
     '.shop-search-result-view .row .BnjBdc'
   );
@@ -38,6 +38,17 @@ function calculateRevenue() {
   productContainers.forEach((container, index) => {
     if (index < 30) {
       // Limiting to top 30 products
+      const titleSelector = `#main > div > div:nth-child(3) > div > div > div > div.shop-page > div > div.container > div.shop-page__all-products-section > div.shop-page_product-list > div > div.shop-search-result-view > div > div:nth-child(${
+        index + 1
+      }) > a > div > div > div.BnjBdc > div.wGBjtA > div._5Z7GUX > div`;
+
+      const urlSelector = `#main > div > div:nth-child(3) > div > div > div > div.shop-page > div > div.container > div.shop-page__all-products-section > div.shop-page_product-list > div > div.shop-search-result-view > div > div:nth-child(${
+        index + 1
+      }) > a`;
+
+      const productNameElement = document.querySelector(titleSelector);
+      const productLinkElement = document.querySelector(urlSelector);
+
       const priceElement = container.querySelector(
         'div.eQZeWo > div._4m2-Os.e5pdAI > span.MQbiLE'
       );
@@ -46,33 +57,86 @@ function calculateRevenue() {
       );
 
       if (priceElement && soldElement) {
-        let price = parseFloat(priceElement.innerText);
+        let price = parseFloat(priceElement.innerText.replace(/,/g, ''));
         let soldQuantity = parseSoldQuantity(soldElement.innerText);
+        let revenue = price * soldQuantity;
+        let productName = productNameElement
+          ? productNameElement.innerText
+          : `Product ${index + 1}`;
+        let productUrl = productLinkElement.getAttribute('href');
 
-        totalRevenue += price * soldQuantity;
+        productsRevenue.push({ productName, revenue, productUrl });
       }
     }
   });
 
+  // Sort products by revenue
+  productsRevenue.sort((a, b) => b.revenue - a.revenue);
+
+  // Create and append the table
+  const revenueTable = createRevenueTable(productsRevenue);
+  const targetDiv = document.querySelector('._1Jkvaf');
+  if (targetDiv) {
+    targetDiv.appendChild(revenueTable);
+  } else {
+    console.error('Target div for revenue table not found');
+  }
+  // Update the total revenue display
+  const totalRevenue = productsRevenue.reduce(
+    (acc, product) => acc + product.revenue,
+    0
+  );
   const formattedRevenue = totalRevenue.toLocaleString('en-SG', {
     style: 'currency',
     currency: 'SGD',
   });
+  updateRevenueDisplay(`<strong>Total Revenue: ${formattedRevenue}</strong>`);
+}
 
-  // Update the revenue display
-  const revenueDisplay = document.getElementById('revenueDisplay');
-  if (revenueDisplay) {
-    revenueDisplay.innerHTML = `<strong>${formattedRevenue}</strong>`;
-  }
-  console.log(
-    'Total estimated revenue for top 30 products: $' +
-      formattedRevenue.toFixed(2)
-  );
+function createRevenueTable(productsRevenue) {
+  const table = document.createElement('table');
+  const thead = table.createTHead();
+  const tbody = table.createTBody();
+
+  let headerRow = thead.insertRow();
+  let headerCell1 = headerRow.insertCell();
+  let headerCell2 = headerRow.insertCell();
+  let headerCell3 = headerRow.insertCell();
+  headerCell1.innerHTML = '<strong>No.</strong>';
+  headerCell2.innerHTML = '<strong>Title</strong>';
+  headerCell3.innerHTML = '<strong>Revenue</strong>';
+
+  productsRevenue.forEach((product, index) => {
+    console.log('product', product);
+    let row = tbody.insertRow();
+    let cell1 = row.insertCell();
+    let cell2 = row.insertCell();
+    let cell3 = row.insertCell();
+
+    cell1.innerText = index + 1;
+
+    let truncatedTitle =
+      product.productName.length > 10
+        ? product.productName.substring(0, 10) + '...'
+        : product.productName;
+    let productLink = document.createElement('a');
+    productLink.href = product.productUrl; // Assuming productUrl is available in your data
+    productLink.innerText = truncatedTitle;
+    productLink.target = '_blank'; // Opens link in new tab
+    cell2.appendChild(productLink);
+
+    cell3.innerText = Math.round(product.revenue);
+  });
+
+  return table;
 }
 
 function parseSoldQuantity(soldText) {
   let soldQuantity = 0;
-  const soldMatch = soldText.match(/([\d.]+)(k?)/);
+  // Remove commas from the soldText
+  const cleanedSoldText = soldText.replace(/,/g, '');
+
+  const soldMatch = cleanedSoldText.match(/([\d.]+)(k?)/);
 
   if (soldMatch) {
     soldQuantity = parseFloat(soldMatch[1]);
